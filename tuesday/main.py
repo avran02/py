@@ -1,7 +1,8 @@
 import pygame
 from pygame.locals import *
-from random import randint
+from utils import get_random_coords
 
+SPEED = 3
 POINTS = 0
 WIDTH = 800
 HEIGHT = 600
@@ -12,7 +13,6 @@ DIRECTION = (0,0)
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
-screen.fill("#333333") # Ставим фон
 
 head_color = "#5c89d1"
 head_x = (WIDTH-HEAD_SIZE)/2
@@ -21,34 +21,31 @@ HEAD = Rect(head_x, head_y, HEAD_SIZE, HEAD_SIZE) # (x, y, ширина, выс�
 
 FOOD_COLOR = "#36e485"
 FOOD_SIZE = 30
+FOOD_POS = get_random_coords(WIDTH, HEIGHT, HEAD_SIZE)
+FOOD = pygame.draw.circle(screen, FOOD_COLOR, FOOD_POS, FOOD_SIZE)    
 
-def get_random_coords():
-    x = randint(0, WIDTH-HEAD_SIZE)
-    y = randint(0, HEIGHT-HEAD_SIZE)
-    return x, y
+def handle_food_touch():
+    global POINTS, FOOD_POS
+    FOOD = pygame.draw.circle(screen, FOOD_COLOR, FOOD_POS, FOOD_SIZE)    
 
-food = pygame.draw.circle(screen, FOOD_COLOR, get_random_coords(), FOOD_SIZE)
-
-
-def spawn_food():
-    global POINTS
-    
-    if food.colliderect(HEAD):
+    if FOOD.colliderect(HEAD):
         POINTS += 1
         print("Ам ням ням")
-        food.move_ip(get_random_coords())
+        FOOD_POS = get_random_coords(WIDTH, HEIGHT, HEAD_SIZE)
+        FOOD.move_ip(FOOD_POS)
+
 
 def handle_keys():
     global DIRECTION
     pressed_keys = pygame.key.get_pressed()
     if pressed_keys[K_UP]:
-        DIRECTION = (0, -3)
+        DIRECTION = (0, -SPEED)
     if pressed_keys[K_DOWN]:
-        DIRECTION = (0, 3)
+        DIRECTION = (0, SPEED)
     if pressed_keys[K_LEFT]:
-        DIRECTION = (-3, 0)
+        DIRECTION = (-SPEED, 0)
     if pressed_keys[K_RIGHT]:
-        DIRECTION = (3, 0)
+        DIRECTION = (SPEED, 0)
 
 def handle_wall_touch(head):
     if head.top < 0:
@@ -60,16 +57,18 @@ def handle_wall_touch(head):
     if head.right > WIDTH:
         head.move_ip(-WIDTH, 0)
 
-spawn_food()
 while PLAY:
     # Обрабатываем события
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             PLAY = False
+    
+    screen.fill("#333333") # Ставим фон
     pygame.draw.rect(screen, head_color, HEAD) # Рисуем голову
     HEAD.move_ip(DIRECTION)
     handle_wall_touch(HEAD)
     handle_keys()
+    handle_food_touch()
 
     pygame.display.flip() # Отображаем изменения на экране
     clock.tick(60) # Максимальный FPS
@@ -77,3 +76,4 @@ while PLAY:
 
 
 pygame.quit()
+ 
