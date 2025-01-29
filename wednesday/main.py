@@ -5,15 +5,24 @@ from settings import *
 pygame.init()
 
 def get_random_coords():
-    x = randint(0, WIDTH-FOOD_SIZE)
-    y = randint(0, HEIGHT-FOOD_SIZE)
+    max_x = int((WIDTH-FOOD_SIZE)/SPEED)
+    max_y = int((HEIGHT-FOOD_SIZE)/SPEED)
+    x = randint(0, max_x) * SPEED
+    y = randint(0, max_y) * SPEED
     return x, y
 
 def spawn_tail():
-    new_tail_part = Rect(HEAD.x, HEAD.y, HEAD_SIZE, HEAD_SIZE)
+    if len(BODY) == 0:
+        x = HEAD.x-DIRECTION[0]*2
+        y = HEAD.y-DIRECTION[1]*2
+    else:
+        x = BODY[-1].x-DIRECTION[0]
+        y = BODY[-1].y-DIRECTION[1]
+    
+    new_tail_part = Rect(x, y, HEAD_SIZE, HEAD_SIZE)
     BODY.append(new_tail_part)
 
-def spawn_food():
+def handle_food_touch():
     global FOOD_POSITION, FOOD, SCORE
     FOOD = pygame.draw.circle(screen, FOOD_COLOR, FOOD_POSITION, FOOD_SIZE)
     if FOOD.colliderect(HEAD):
@@ -62,14 +71,15 @@ while RUNNING:
     
     # Ставим фон
     screen.fill(BACKGROUND_COLOR)
-    spawn_food()
     pygame.draw.rect(screen, HEAD_COLOR, HEAD)
+    handle_food_touch()
 
     handle_wall_touch()
     handle_keys()
     HEAD.move_ip(DIRECTION)
 
     for tail_part in BODY:
+        tail_part.move_ip(DIRECTION)
         pygame.draw.rect(screen, BODY_COLOR, tail_part)
 
     # Отображаем изменения на экране
